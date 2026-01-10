@@ -191,13 +191,20 @@ class KeyboardViewController: UIInputViewController {
     }
     
     private func startRecording() {
-        // Request microphone permission if needed
-        AVAudioSession.sharedInstance().requestRecordPermission { [weak self] granted in
-            DispatchQueue.main.async {
-                if granted {
-                    self?.beginRecording()
-                } else {
-                    self?.statusLabel.text = "Microphone access denied"
+        // Request microphone permission using modern API
+        Task {
+            do {
+                let granted = try await AVAudioApplication.requestRecordPermission()
+                await MainActor.run {
+                    if granted {
+                        self.beginRecording()
+                    } else {
+                        self.statusLabel.text = "Microphone access denied"
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.statusLabel.text = "Permission error: \(error.localizedDescription)"
                 }
             }
         }

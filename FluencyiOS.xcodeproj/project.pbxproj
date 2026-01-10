@@ -110,7 +110,7 @@
 				01KEYBOARDFILE001 /* KeyboardViewController.swift */,
 				01KEYBOARDFILE002 /* Info.plist */,
 			);
-			path = FluencyKeyboard;
+			path = FluencyiOS/FluencyKeyboard;
 			sourceTree = "<group>";
 		};
 		01MAINGROUP001 = {

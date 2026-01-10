@@ -6,18 +6,27 @@ struct FluencyiOSApp: App {
     let sharedModelContainer: ModelContainer
     
     init() {
-        // Configure SwiftData with App Group for keyboard extension sharing
+        // Configure SwiftData - try App Group first, fall back to local if not configured
         let schema = Schema([Transcription.self])
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false,
-            groupContainer: .identifier("group.com.fluency.ios")
-        )
         
+        // Try with App Group first (for keyboard extension sharing)
         do {
-            sharedModelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let groupConfig = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                groupContainer: .identifier("group.com.fluency.ios")
+            )
+            sharedModelContainer = try ModelContainer(for: schema, configurations: [groupConfig])
+            print("✅ Using App Group container for SwiftData")
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            // Fall back to local storage if App Group not available
+            print("⚠️ App Group not available, using local storage: \(error.localizedDescription)")
+            do {
+                let localConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+                sharedModelContainer = try ModelContainer(for: schema, configurations: [localConfig])
+            } catch {
+                fatalError("Could not create ModelContainer: \(error)")
+            }
         }
     }
     
