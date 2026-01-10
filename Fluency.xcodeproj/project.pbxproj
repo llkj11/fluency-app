@@ -24,6 +24,7 @@
 		F0000011001 /* TextCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000011000 /* TextCaptureService.swift */; };
 		F0000012001 /* SpeakingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000012000 /* SpeakingOverlay.swift */; };
 		F0000013001 /* GroqService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000013000 /* GroqService.swift */; };
+		F0000014001 /* SyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000014000 /* SyncService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +48,7 @@
 		F0000011000 /* TextCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextCaptureService.swift; sourceTree = "<group>"; };
 		F0000012000 /* SpeakingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakingOverlay.swift; sourceTree = "<group>"; };
 		F0000013000 /* GroqService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroqService.swift; sourceTree = "<group>"; };
+		F0000014000 /* SyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +110,7 @@
 				F000000E000 /* StatsService.swift */,
 				F0000010000 /* TTSService.swift */,
 				F0000013000 /* GroqService.swift */,
+				F0000014000 /* SyncService.swift */,
 				F0000011000 /* TextCaptureService.swift */,
 			);
 			path = Services;
@@ -218,6 +221,7 @@
 				F0000010001 /* TTSService.swift in Sources */,
 				F0000011001 /* TextCaptureService.swift in Sources */,
 				F0000013001 /* GroqService.swift in Sources */,
+				F0000014001 /* SyncService.swift in Sources */,
 				F0000012001 /* SpeakingOverlay.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

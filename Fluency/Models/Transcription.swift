@@ -8,6 +8,10 @@ final class Transcription {
     var createdAt: Date
     var duration: TimeInterval
     var wordCount: Int
+    
+    // Sync Metadata
+    var isSynced: Bool = false
+    var serverID: String?
 
     init(text: String, duration: TimeInterval) {
         self.id = UUID()
@@ -15,5 +19,6 @@ final class Transcription {
         self.createdAt = Date()
         self.duration = duration
         self.wordCount = text.split(separator: " ").count
+        self.isSynced = false
     }
 }

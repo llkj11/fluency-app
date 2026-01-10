@@ -454,6 +454,42 @@ struct SettingsView: View {
             }
 
             Section {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Home Server URL")
+                        .font(.headline)
+                    
+                    TextField("10.69.1.250", text: Binding(
+                        get: { SyncService.shared.serverURL },
+                        set: { SyncService.shared.serverURL = $0 }
+                    ))
+                    .textFieldStyle(.roundedBorder)
+                    
+                    HStack {
+                        StatusIndicator(
+                            isOn: SyncService.shared.isConnected,
+                            onText: "Connected to Server",
+                            offText: "Server Disconnected"
+                        )
+                        
+                        Spacer()
+                        
+                        Button("Test Connection") {
+                            Task {
+                                _ = await SyncService.shared.testConnection()
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+            } header: {
+                Text("Server Sync")
+            } footer: {
+                Text("Transcriptions and stats sync to port 7006 on your home server.")
+                    .font(.caption)
+            }
+
+            Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("How to Use")
                         .font(.headline)
@@ -739,6 +775,24 @@ struct PermissionRow: View {
             .controlSize(.small)
         }
         .padding(.vertical, 4)
+    }
+}
+
+struct StatusIndicator: View {
+    let isOn: Bool
+    let onText: String
+    let offText: String
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(isOn ? Color.green : Color.red)
+                .frame(width: 8, height: 8)
+            
+            Text(isOn ? onText : offText)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
     }
 }
 

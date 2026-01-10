@@ -39,6 +39,13 @@ struct MenuBarView: View {
                 let transcription = Transcription(text: text, duration: duration)
                 modelContext.insert(transcription)
                 try? modelContext.save()
+                
+                // Sync to server
+                Task {
+                    await SyncService.shared.syncTranscription(transcription)
+                    await SyncService.shared.syncStats()
+                    try? modelContext.save()
+                }
             }
         }
     }
