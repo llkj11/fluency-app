@@ -8,6 +8,9 @@ struct MenuBarView: View {
     @Query(sort: \Transcription.createdAt, order: .reverse) private var transcriptions: [Transcription]
 
     @State private var selectedTab = 0
+    @State private var showingWordsDetail = false
+    @State private var showingTranscriptionsDetail = false
+    @State private var serverStats: StatsService.ServerStats?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -110,24 +113,40 @@ struct MenuBarView: View {
     private var statsSection: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                MiniStatCard(
-                    value: "\(StatsService.shared.totalWords)",
-                    label: "Words",
-                    icon: "text.word.spacing",
-                    color: .blue
-                )
+                Button {
+                    showingWordsDetail = true
+                } label: {
+                    MiniStatCard(
+                        value: "\(serverStats?.totalWords ?? 0)",
+                        label: "Words",
+                        icon: "text.word.spacing",
+                        color: .blue
+                    )
+                }
+                .buttonStyle(.plain)
+                .sheet(isPresented: $showingWordsDetail) {
+                    WordsDetailView()
+                }
                 
-                MiniStatCard(
-                    value: "\(StatsService.shared.totalTranscriptions)",
-                    label: "Transcriptions",
-                    icon: "waveform",
-                    color: .purple
-                )
+                Button {
+                    showingTranscriptionsDetail = true
+                } label: {
+                    MiniStatCard(
+                        value: "\(serverStats?.totalTranscriptions ?? 0)",
+                        label: "Transcriptions",
+                        icon: "waveform",
+                        color: .purple
+                    )
+                }
+                .buttonStyle(.plain)
+                .sheet(isPresented: $showingTranscriptionsDetail) {
+                    TranscriptionsDetailView()
+                }
             }
             
             HStack(spacing: 12) {
                 MiniStatCard(
-                    value: formatTime(StatsService.shared.totalDuration),
+                    value: formatTime(serverStats?.totalDuration ?? 0),
                     label: "Recorded",
                     icon: "clock",
                     color: .orange
@@ -142,6 +161,9 @@ struct MenuBarView: View {
             }
         }
         .padding(.horizontal, 16)
+        .task {
+            serverStats = await StatsService.shared.fetchStats()
+        }
     }
     
     private var quickTip: some View {

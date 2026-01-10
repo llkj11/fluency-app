@@ -1,49 +1,53 @@
 import SwiftUI
 
 struct StatsView: View {
-    private let stats = StatsService.shared
+    @State private var stats: StatsService.ServerStats?
+    @State private var isLoading = true
     
     var body: some View {
         VStack(spacing: 16) {
-            HStack(spacing: 20) {
-                StatCard(
-                    title: "Words Dictated",
-                    value: "\(stats.totalWords)",
-                    icon: "text.word.spacing",
-                    color: .blue
-                )
+            if isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                HStack(spacing: 20) {
+                    StatCard(
+                        title: "Words Dictated",
+                        value: "\(stats?.totalWords ?? 0)",
+                        icon: "text.word.spacing",
+                        color: .blue
+                    )
+                    
+                    StatCard(
+                        title: "Transcriptions",
+                        value: "\(stats?.totalTranscriptions ?? 0)",
+                        icon: "waveform",
+                        color: .purple
+                    )
+                }
                 
-                StatCard(
-                    title: "Transcriptions",
-                    value: "\(stats.totalTranscriptions)",
-                    icon: "waveform",
-                    color: .purple
-                )
-            }
-            
-            HStack(spacing: 20) {
-                StatCard(
-                    title: "Time Recorded",
-                    value: formatDuration(stats.totalDuration),
-                    icon: "clock",
-                    color: .orange
-                )
-                
-                StatCard(
-                    title: "Time Saved",
-                    value: formatDuration(stats.estimatedTimeSaved),
-                    icon: "bolt.fill",
-                    color: .green
-                )
-            }
-            
-            if stats.firstUseDate != nil {
-                Text("Using Fluency for \(stats.daysActive) day\(stats.daysActive == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack(spacing: 20) {
+                    StatCard(
+                        title: "Time Recorded",
+                        value: formatDuration(stats?.totalDuration ?? 0),
+                        icon: "clock",
+                        color: .orange
+                    )
+                    
+                    StatCard(
+                        title: "Time Saved",
+                        value: formatDuration(StatsService.shared.estimatedTimeSaved),
+                        icon: "bolt.fill",
+                        color: .green
+                    )
+                }
             }
         }
         .padding(.vertical, 8)
+        .task {
+            stats = await StatsService.shared.fetchStats()
+            isLoading = false
+        }
     }
     
     private func formatDuration(_ seconds: TimeInterval) -> String {

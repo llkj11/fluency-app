@@ -25,6 +25,8 @@
 		F0000012001 /* SpeakingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000012000 /* SpeakingOverlay.swift */; };
 		F0000013001 /* GroqService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000013000 /* GroqService.swift */; };
 		F0000014001 /* SyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000014000 /* SyncService.swift */; };
+		F0000015001 /* TranscriptionsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000015000 /* TranscriptionsDetailView.swift */; };
+		F0000016001 /* WordsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000016000 /* WordsDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +51,8 @@
 		F0000012000 /* SpeakingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakingOverlay.swift; sourceTree = "<group>"; };
 		F0000013000 /* GroqService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroqService.swift; sourceTree = "<group>"; };
 		F0000014000 /* SyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncService.swift; sourceTree = "<group>"; };
+		F0000015000 /* TranscriptionsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionsDetailView.swift; sourceTree = "<group>"; };
+		F0000016000 /* WordsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordsDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -125,6 +129,8 @@
 				F000000A000 /* SettingsView.swift */,
 				F000000F000 /* StatsView.swift */,
 				F0000012000 /* SpeakingOverlay.swift */,
+				F0000015000 /* TranscriptionsDetailView.swift */,
+				F0000016000 /* WordsDetailView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -223,6 +229,8 @@
 				F0000013001 /* GroqService.swift in Sources */,
 				F0000014001 /* SyncService.swift in Sources */,
 				F0000012001 /* SpeakingOverlay.swift in Sources */,
+				F0000015001 /* TranscriptionsDetailView.swift in Sources */,
+				F0000016001 /* WordsDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
