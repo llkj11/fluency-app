@@ -26,10 +26,10 @@ struct SettingsView: View {
     
     enum TranscriptionProvider: String, CaseIterable {
         case openAI = "GPT-4o Mini Transcribe"
-        case whisper = "OpenAI Whisper (Coming Soon)"
-        case deepgram = "Deepgram (Coming Soon)"
-        case assemblyAI = "AssemblyAI (Coming Soon)"
-        case localWhisper = "Local Whisper (Coming Soon)"
+        case provider2 = "Provider 2 (Coming Soon)"
+        case provider3 = "Provider 3 (Coming Soon)"
+        case provider4 = "Provider 4 (Coming Soon)"
+        case provider5 = "Provider 5 (Coming Soon)"
     }
 
     var body: some View {

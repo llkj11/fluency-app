@@ -31,10 +31,10 @@ enum TTSError: LocalizedError {
 
 enum TTSProvider: String, CaseIterable {
     case openAI = "OpenAI"
-    case elevenlabs = "ElevenLabs (Coming Soon)"
-    case azure = "Azure TTS (Coming Soon)"
-    case google = "Google Cloud TTS (Coming Soon)"
-    case amazon = "Amazon Polly (Coming Soon)"
+    case provider2 = "Provider 2 (Coming Soon)"
+    case provider3 = "Provider 3 (Coming Soon)"
+    case provider4 = "Provider 4 (Coming Soon)"
+    case provider5 = "Provider 5 (Coming Soon)"
     
     var isAvailable: Bool {
         switch self {
