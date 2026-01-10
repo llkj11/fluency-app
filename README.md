@@ -11,7 +11,7 @@
 - **Auto-Paste**: Inserts transcribed text directly into your active application.
 
 ### 🗣️ AI Text-to-Speech (TTS)
-- **Global Hotkey**: Select text and press `Fn` + `Control` to hear it read aloud.
+- **Global Hotkey**: Select text, then hold `Fn` and press `Control` to hear it read aloud.
 - **Multi-Provider Support**:
   - **OpenAI**: Uses `gpt-4o-mini-tts` for natural, human-like speech.
   - **Google Gemini**: Uses `gemini-2.5-flash-preview` for expressive, director-controlled performances.
