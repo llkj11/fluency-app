@@ -484,6 +484,9 @@ class TTSService: NSObject, AVAudioPlayerDelegate {
             try streamingPlayer?.prepare()
             isSpeaking = true
             
+            // Play beep to signal TTS is about to start
+            AudioFeedbackService.shared.playSuccessSound()
+            
             // Stream audio chunks as they arrive
             var buffer = Data()
             let chunkSize = 4800 // ~100ms of audio at 24kHz 16-bit
