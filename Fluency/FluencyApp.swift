@@ -90,6 +90,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func setupSettingsWindow() {
         let settingsView = SettingsView()
             .environmentObject(appState)
+            .modelContainer(FluencyApp.sharedModelContainer)
         
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 450, height: 600),
