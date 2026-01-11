@@ -13,11 +13,13 @@ class HotkeyService {
 
     private let onRecordingStart: () -> Void
     private let onRecordingStop: () -> Void
+    private let onRecordingCancel: () -> Void
     private let onTTSTriggered: () -> Void
 
-    init(onRecordingStart: @escaping () -> Void, onRecordingStop: @escaping () -> Void, onTTSTriggered: @escaping () -> Void = {}) {
+    init(onRecordingStart: @escaping () -> Void, onRecordingStop: @escaping () -> Void, onRecordingCancel: @escaping () -> Void = {}, onTTSTriggered: @escaping () -> Void = {}) {
         self.onRecordingStart = onRecordingStart
         self.onRecordingStop = onRecordingStop
+        self.onRecordingCancel = onRecordingCancel
         self.onTTSTriggered = onTTSTriggered
     }
 
@@ -142,6 +144,37 @@ class HotkeyService {
         if !optionAndFn {
             optionWasPressed = false
         }
+        
+        // Check for Control+Fn combination (for cancel)
+        let controlIsPressed = flags.contains(.control)
+        let controlAndFn = controlIsPressed && fnIsPressed &&
+                           !flags.contains(.command) &&
+                           !flags.contains(.option) &&
+                           !flags.contains(.shift)
+        
+        // Handle Control + Fn for Cancel
+        if controlAndFn && !controlWasPressed {
+            controlWasPressed = true
+            
+            // Cancel any pending STT start
+            startRecordingWorkItem?.cancel()
+            startRecordingWorkItem = nil
+            
+            // If we were recording, cancel it (don't process)
+            if isRecording {
+                print("❌ Control+Fn - cancelling recording!")
+                cancelRecording()
+            }
+            
+            // Reset fnPressed so we don't trigger STT when releasing
+            fnPressed = false
+            return // Skip further processing
+        }
+        
+        // Reset controlWasPressed when the combination is broken
+        if !controlAndFn {
+            controlWasPressed = false
+        }
 
         // Handle Fn-only for recording (STT)
         // Only start if Option is NOT pressed
@@ -189,6 +222,14 @@ class HotkeyService {
         isRecording = false
         DispatchQueue.main.async { [weak self] in
             self?.onRecordingStop()
+        }
+    }
+    
+    private func cancelRecording() {
+        guard isRecording else { return }
+        isRecording = false
+        DispatchQueue.main.async { [weak self] in
+            self?.onRecordingCancel()
         }
     }
 

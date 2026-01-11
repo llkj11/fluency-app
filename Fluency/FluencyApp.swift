@@ -300,6 +300,11 @@ class AppState: ObservableObject {
                     self?.stopRecordingAndTranscribe()
                 }
             },
+            onRecordingCancel: { [weak self] in
+                Task { @MainActor in
+                    self?.cancelRecording()
+                }
+            },
             onTTSTriggered: { [weak self] in
                 Task { @MainActor in
                     self?.triggerTTS()
@@ -381,6 +386,31 @@ class AppState: ObservableObject {
             Task { @MainActor in
                 self?.recordingDuration += 0.1
                 self?.audioLevel = self?.audioRecorder?.currentLevel ?? 0
+            }
+        }
+    }
+    
+    private func cancelRecording() {
+        guard isRecording else { return }
+        
+        recordingTimer?.invalidate()
+        recordingTimer = nil
+        isRecording = false
+        statusMessage = "Cancelled"
+        onRecordingStateChanged?(false)
+        
+        // Play error sound to indicate cancellation
+        AudioFeedbackService.shared.playErrorSound()
+        
+        // Stop recording but discard the audio
+        if let audioURL = audioRecorder?.stopRecording() {
+            try? FileManager.default.removeItem(at: audioURL)
+        }
+        
+        // Reset status after a moment
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            if self?.statusMessage == "Cancelled" {
+                self?.statusMessage = "Ready"
             }
         }
     }
