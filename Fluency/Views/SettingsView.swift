@@ -446,11 +446,8 @@ struct SettingsView: View {
                 }
             } header: {
                 Text("Text-to-Speech")
-            } footer: {
-                Text("⭐ Marin and Cedar are recommended. Styles control tone, speed, and emotion.")
-                    .font(.caption)
             }
-            
+
             Section {
                 StatsView()
             } header: {

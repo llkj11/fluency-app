@@ -142,6 +142,7 @@ class TTSService: NSObject, AVAudioPlayerDelegate {
     private let model = "gpt-4o-mini-tts"
     
     private var audioPlayer: AVAudioPlayer?
+    private var streamingPlayer: StreamingAudioPlayer?
     private var onPlaybackComplete: (() -> Void)?
     private(set) var isSpeaking = false
     
@@ -218,7 +219,7 @@ class TTSService: NSObject, AVAudioPlayerDelegate {
             "model": model,
             "input": text,
             "voice": voice.rawValue,
-            "response_format": "mp3"
+            "response_format": "pcm"  // Use PCM for streaming
         ]
         
         if !preset.instructions.isEmpty {
@@ -227,13 +228,70 @@ class TTSService: NSObject, AVAudioPlayerDelegate {
         
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw TTSError.invalidResponse
+        try await performStreamingRequest(request, onComplete: onComplete)
+    }
+    
+    private func performStreamingRequest(_ request: URLRequest, onComplete: (() -> Void)?) async throws {
+        do {
+            // Set up audio session for iOS
+            try AVAudioSession.sharedInstance().setCategory(.playback)
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+            let (bytes, response) = try await URLSession.shared.bytes(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw TTSError.invalidResponse
+            }
+            
+            guard httpResponse.statusCode == 200 else {
+                var errorData = Data()
+                for try await byte in bytes {
+                    errorData.append(byte)
+                    if errorData.count > 4096 { break }
+                }
+                if let errorJson = try? JSONSerialization.jsonObject(with: errorData) as? [String: Any],
+                   let error = errorJson["error"] as? [String: Any],
+                   let message = error["message"] as? String {
+                    throw TTSError.apiError(message)
+                }
+                throw TTSError.apiError("HTTP \(httpResponse.statusCode)")
+            }
+            
+            // Initialize streaming player
+            streamingPlayer = StreamingAudioPlayer()
+            try streamingPlayer?.prepare()
+            isSpeaking = true
+            
+            // Stream audio chunks
+            var buffer = Data()
+            let chunkSize = 4800
+            
+            for try await byte in bytes {
+                buffer.append(byte)
+                if buffer.count >= chunkSize {
+                    streamingPlayer?.scheduleChunk(buffer)
+                    buffer = Data()
+                }
+            }
+            
+            if !buffer.isEmpty {
+                streamingPlayer?.scheduleChunk(buffer)
+            }
+            
+            streamingPlayer?.finishStreaming { [weak self] in
+                self?.isSpeaking = false
+                onComplete?()
+            }
+            
+        } catch let error as TTSError {
+            streamingPlayer?.stop()
+            isSpeaking = false
+            throw error
+        } catch {
+            streamingPlayer?.stop()
+            isSpeaking = false
+            throw TTSError.networkError(error)
         }
-        
-        try await playAudio(data: data, onComplete: onComplete)
     }
     
     private func speakGemini(text: String, voice: TTSVoice, preset: VoicePreset, onComplete: (() -> Void)?) async throws {
@@ -338,6 +396,8 @@ class TTSService: NSObject, AVAudioPlayerDelegate {
     func stopSpeaking() {
         audioPlayer?.stop()
         audioPlayer = nil
+        streamingPlayer?.stop()
+        streamingPlayer = nil
         isSpeaking = false
         onPlaybackComplete?()
         onPlaybackComplete = nil
