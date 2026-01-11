@@ -11,7 +11,7 @@
 - **Auto-Paste**: Inserts transcribed text directly into your active application.
 
 ### 🗣️ AI Text-to-Speech (TTS)
-- **Global Hotkey**: Select text, then hold `Fn` and press `Control` to hear it read aloud.
+- **Global Hotkey**: Select text, then hold `Option` and press `Fn` to hear it read aloud.
 - **Multi-Provider Support**:
   - **OpenAI**: Uses `gpt-4o-mini-tts` for natural, human-like speech.
   - **Google Gemini**: Uses `gemini-2.5-flash-preview` for expressive, director-controlled performances.
@@ -34,8 +34,8 @@
 | Feature | Action |
 | :--- | :--- |
 | **Dictate** | Hold `Fn`, speak, then release |
-| **Read Selected Text** | Highlight text, then hold `Fn` and press `Control` |
-| **Stop Reading** | Tap `Fn` |
+| **Read Selected Text** | Highlight text, then hold `Option` and press `Fn` |
+| **Stop Reading** | Hold `Option` then press `Fn` |
 
 ## Requirements
 - macOS 13.0 (Ventura) or later.

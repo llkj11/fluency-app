@@ -440,7 +440,7 @@ struct SettingsView: View {
                         .disabled(apiKey.isEmpty || isPreviewingVoice)
                     }
                     
-                    Text("Shortcut: Hold Fn + Press Control")
+                    Text("Shortcut: Hold Option + Press Fn")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -512,7 +512,7 @@ struct SettingsView: View {
                         InstructionRow(number: 1, text: "Set 'Press 🌐 key to' → 'Do Nothing' in System Settings → Keyboard")
                         InstructionRow(number: 2, text: "Click in any text field")
                         InstructionRow(number: 3, text: "Hold the Fn key and speak → release to transcribe (STT)")
-                        InstructionRow(number: 4, text: "Select text anywhere, then Fn + Control → speaks text (TTS)")
+                        InstructionRow(number: 4, text: "Hold Option, then press Fn → speaks selected text (TTS)")
                     }
                 }
             } header: {

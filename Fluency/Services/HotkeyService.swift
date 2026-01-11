@@ -7,6 +7,7 @@ class HotkeyService {
     private var localMonitor: Any?
     private var isRecording = false
     private var fnPressed = false
+    private var optionWasPressed = false
     private var controlWasPressed = false
     private var retryTimer: Timer?
 
@@ -94,52 +95,60 @@ class HotkeyService {
 
         // The Fn key sets the "function" bit in modifier flags
         let fnIsPressed = flags.contains(.function)
-        let controlIsPressed = flags.contains(.control)
+        let optionIsPressed = flags.contains(.option)
 
         // Debug: print all flag changes
-        print("🔑 Flags: keyCode=\(keyCode), fn=\(fnIsPressed), ctrl=\(controlIsPressed), raw=\(flags.rawValue)")
+        print("🔑 Flags: keyCode=\(keyCode), fn=\(fnIsPressed), option=\(optionIsPressed), fnPressed=\(fnPressed), raw=\(flags.rawValue)")
 
-        // Check if ONLY Fn is pressed (no other modifiers)
+        // Check if ONLY Fn is pressed (no other modifiers except function)
         let fnOnly = fnIsPressed &&
                      !flags.contains(.command) &&
                      !flags.contains(.option) &&
                      !flags.contains(.shift) &&
                      !flags.contains(.control)
         
-        // Check if Fn+Control is pressed (for TTS)
-        let fnAndControl = fnIsPressed && controlIsPressed &&
-                           !flags.contains(.command) &&
-                           !flags.contains(.option) &&
-                           !flags.contains(.shift)
+        // Check for Option+Fn combination (for TTS)
+        let optionAndFn = optionIsPressed && fnIsPressed &&
+                          !flags.contains(.command) &&
+                          !flags.contains(.shift) &&
+                          !flags.contains(.control)
 
-        // Handle Fn+Control for TTS
-        if fnAndControl && !controlWasPressed {
-            controlWasPressed = true
+        // Handle Option + Fn for TTS
+        // Trigger when Fn becomes pressed while Option is held, OR when Option becomes pressed while Fn is held
+        if optionAndFn && !optionWasPressed {
+            optionWasPressed = true
             
             // Cancel any pending STT start
             startRecordingWorkItem?.cancel()
             startRecordingWorkItem = nil
             
-            // If we were already recording (user pressed Fn, waited > delay, then pressed Control), stop it
+            // If we were recording, stop it
             if isRecording {
                 print("⏹️ Stopping recording for TTS trigger")
                 stopRecording()
             }
             
-            print("🔊 Fn+Control pressed - triggering TTS!")
+            // Reset fnPressed so we don't trigger STT when releasing
+            fnPressed = false
+            
+            print("🔊 Option+Fn combination detected - triggering TTS!")
             DispatchQueue.main.async { [weak self] in
                 self?.onTTSTriggered()
             }
-        } else if !controlIsPressed && controlWasPressed {
-            controlWasPressed = false
+            return // Skip further processing
+        }
+        
+        // Reset optionWasPressed when the combination is broken
+        if !optionAndFn {
+            optionWasPressed = false
         }
 
         // Handle Fn-only for recording (STT)
-        // Add a small delay to allow for Fn+Control sequence
-        if fnOnly && !fnPressed && !controlWasPressed {
+        // Only start if Option is NOT pressed
+        if fnOnly && !fnPressed && !optionIsPressed {
             fnPressed = true
             
-            // Cancel any existing item just in case
+            // Cancel any existing work item
             startRecordingWorkItem?.cancel()
             
             let workItem = DispatchWorkItem { [weak self] in
@@ -149,8 +158,8 @@ class HotkeyService {
             }
             
             startRecordingWorkItem = workItem
-            // 200ms delay to check if user presses Control
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: workItem)
+            // Short delay to allow for Option+Fn sequence
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: workItem)
             
         } else if !fnIsPressed && fnPressed {
             // Fn released
