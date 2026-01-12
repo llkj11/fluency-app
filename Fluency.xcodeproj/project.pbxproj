@@ -6,8 +6,18 @@
 	objectVersion = 56;
 	objects = {
 
-/* Begin PBXBuildFile section */
 		300E0AC2E26928233E0E6A72 /* StreamingAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B725D2677A2E3BB94AB297E /* StreamingAudioPlayer.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F00000D0001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F00000P0000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F00000T0000;
+			remoteInfo = Fluency;
+		};
+/* End PBXContainerItemProxy section */
 		CD65DAD7A368BE2BA44813FD /* MainAppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FC6743F37560A22EC1C974 /* MainAppView.swift */; };
 		F0000001001 /* FluencyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000001000 /* FluencyApp.swift */; };
 		F0000002001 /* Transcription.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000002000 /* Transcription.swift */; };
@@ -30,6 +40,7 @@
 		F0000015001 /* TranscriptionsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000015000 /* TranscriptionsDetailView.swift */; };
 		F0000016001 /* WordsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000016000 /* WordsDetailView.swift */; };
 		F0000017001 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000017000 /* ThemeManager.swift */; };
+		F0000019001 /* ThemeManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000019000 /* ThemeManagerTests.swift */; };
 		F246672EF5A903D8044CE885 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 17D3AA5D14AD3D86938C5AE9 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -38,6 +49,7 @@
 		1B725D2677A2E3BB94AB297E /* StreamingAudioPlayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreamingAudioPlayer.swift; sourceTree = "<group>"; };
 		27FC6743F37560A22EC1C974 /* MainAppView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MainAppView.swift; path = MainAppView.swift; sourceTree = "<group>"; };
 		F0000000000 /* Fluency.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Fluency.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F0000018000 /* FluencyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FluencyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0000001000 /* FluencyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FluencyApp.swift; sourceTree = "<group>"; };
 		F0000002000 /* Transcription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transcription.swift; sourceTree = "<group>"; };
 		F0000003000 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
@@ -61,10 +73,18 @@
 		F0000015000 /* TranscriptionsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionsDetailView.swift; sourceTree = "<group>"; };
 		F0000016000 /* WordsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordsDetailView.swift; sourceTree = "<group>"; };
 		F0000017000 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		F0000019000 /* ThemeManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManagerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		F00000F0000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F00000F1000 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -78,6 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				F00000G1000 /* Fluency */,
+				F00000G7000 /* FluencyTests */,
 				F00000G2000 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -99,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				F0000000000 /* Fluency.app */,
+				F0000018000 /* FluencyTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,6 +168,14 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		F00000G7000 /* FluencyTests */ = {
+			isa = PBXGroup;
+			children = (
+				F0000019000 /* ThemeManagerTests.swift */,
+			);
+			path = FluencyTests;
+			sourceTree = "<group>";
+		};
 		F00000G6000 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -174,6 +204,24 @@
 			productName = Fluency;
 			productReference = F0000000000 /* Fluency.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F00000T1000 /* FluencyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F00000C2000 /* Build configuration list for PBXNativeTarget "FluencyTests" */;
+			buildPhases = (
+				F00000S1000 /* Sources */,
+				F00000F1000 /* Frameworks */,
+				F00000R1000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F00000D0000 /* PBXTargetDependency */,
+			);
+			name = FluencyTests;
+			productName = FluencyTests;
+			productReference = F0000018000 /* FluencyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -204,9 +252,18 @@
 			projectRoot = "";
 			targets = (
 				F00000T0000 /* Fluency */,
+				F00000T1000 /* FluencyTests */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXTargetDependency section */
+		F00000D0000 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F00000T0000 /* Fluency */;
+			targetProxy = F00000D0001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXResourcesBuildPhase section */
 		F00000R0000 /* Resources */ = {
@@ -214,6 +271,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				F246672EF5A903D8044CE885 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F00000R1000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,6 +311,14 @@
 				CD65DAD7A368BE2BA44813FD /* MainAppView.swift in Sources */,
 				300E0AC2E26928233E0E6A72 /* StreamingAudioPlayer.swift in Sources */,
 				F0000017001 /* ThemeManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F00000S1000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0000019001 /* ThemeManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -455,6 +527,42 @@
 			};
 			name = Release;
 		};
+		F00000B5000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KQ837RL7AU;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fluency.app.FluencyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fluency.app/Contents/MacOS/Fluency";
+			};
+			name = Debug;
+		};
+		F00000B6000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KQ837RL7AU;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fluency.app.FluencyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fluency.app/Contents/MacOS/Fluency";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -472,6 +580,15 @@
 			buildConfigurations = (
 				F00000B3000 /* Debug */,
 				F00000B4000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F00000C2000 /* Build configuration list for PBXNativeTarget "FluencyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F00000B5000 /* Debug */,
+				F00000B6000 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

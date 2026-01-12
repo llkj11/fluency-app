@@ -115,16 +115,20 @@ struct ThemeStyles {
 
 @Observable
 final class ThemeManager {
-    private static let themeKey = "selectedTheme"
+    private let userDefaults: UserDefaults
+    private let themeKey: String
     
     var currentTheme: AppTheme {
         didSet {
-            UserDefaults.standard.set(currentTheme.rawValue, forKey: Self.themeKey)
+            userDefaults.set(currentTheme.rawValue, forKey: themeKey)
         }
     }
     
     init() {
-        if let savedTheme = UserDefaults.standard.string(forKey: Self.themeKey),
+        self.userDefaults = .standard
+        self.themeKey = "selectedTheme"
+        
+        if let savedTheme = userDefaults.string(forKey: themeKey),
            let theme = AppTheme(rawValue: savedTheme) {
             self.currentTheme = theme
         } else {
@@ -134,6 +138,9 @@ final class ThemeManager {
     
     // For testing - allows injecting a custom UserDefaults
     init(userDefaults: UserDefaults, key: String = "selectedTheme") {
+        self.userDefaults = userDefaults
+        self.themeKey = key
+        
         if let savedTheme = userDefaults.string(forKey: key),
            let theme = AppTheme(rawValue: savedTheme) {
             self.currentTheme = theme

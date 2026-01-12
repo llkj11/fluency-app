@@ -19,6 +19,17 @@
 - **Visual Overlay**: Beautiful animated waveform overlay while speaking.
 - **30+ Voices**: Access a massive library of voices from both providers.
 
+### 🎨 Global Themes
+- **Customize Your Experience**: Choose from 6 unique themes that transform the app's colors, fonts, and styling.
+- **Available Themes**:
+  - **Aurora**: Vibrant purple to cyan gradient (Default).
+  - **Midnight**: Deep indigo and electric blue.
+  - **Ember**: Warm orange and deep red.
+  - **Forest**: Emerald green and teal.
+  - **Monochrome**: Minimal grayscale.
+  - **Sakura**: Soft pink and lavender.
+- **Persistent Selection**: Your chosen theme is automatically saved across sessions.
+
 ## Setup
 
 1.  **Launch the App**: Open **Fluency.app**.
