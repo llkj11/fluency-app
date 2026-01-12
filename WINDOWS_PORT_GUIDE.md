@@ -1,207 +1,172 @@
-# Fluency for Windows - Implementation Guide
+# Fluency for Windows (Tauri v2) - Implementation Guide
 
-A high-level guide for porting Fluency from macOS (Swift/SwiftUI) to Windows (C#/WinUI 3).
+This document describes the Windows port of Fluency (currently macOS Swift/SwiftUI) using Tauri v2. It focuses on the core architecture, service mappings, and implementation order.
 
 ## Overview
 
-Fluency is a dictation and TTS utility that runs in the system tray. It captures audio, transcribes via Groq Whisper API, and reads text aloud via OpenAI/Gemini TTS with streaming playback.
+Fluency is a dictation and TTS utility that runs quietly in the background. It captures microphone audio, transcribes with the Groq Whisper API, and plays back text via OpenAI/Gemini TTS using streamed PCM.
 
----
+## Architecture Strategy
+
+- Frontend (UI): React + TailwindCSS for overlay visuals, waveform rendering, and settings UI.
+- Backend (Core): Rust for audio devices, global hotkeys, API calls, clipboard handling, and input simulation.
 
 ## Architecture Mapping
 
-### Platform Equivalents
-
-| macOS Component | Windows Equivalent |
-|-----------------|-------------------|
-| SwiftUI + AppKit | WinUI 3 (Windows App SDK) |
-| AVAudioEngine | WASAPI or NAudio library |
-| AVAudioPlayer | NAudio WaveOutEvent |
-| URLSession | HttpClient |
-| Keychain | Windows Credential Manager (PasswordVault) |
-| UserDefaults | ApplicationData.LocalSettings |
-| NSSound | System.Media.SoundPlayer |
-| CGEventTap (Hotkeys) | Win32 SetWindowsHookEx / RegisterHotKey |
-| NSPasteboard | Windows.ApplicationModel.DataTransfer.Clipboard |
-| Accessibility API | UI Automation (UIA) |
-
----
+| macOS Component | Windows (Tauri) Equivalent |
+| --- | --- |
+| SwiftUI + AppKit | React + HTML/CSS (Frontend) |
+| Swift Logic | Rust Backend |
+| AVAudioEngine | cpal (Audio Capture) + rodio (Playback) |
+| URLSession | reqwest (Rust HTTP Client) |
+| Keychain | keyring (Windows Credential Manager) |
+| UserDefaults | tauri-plugin-store (JSON file store) |
+| CGEventTap (Hotkeys) | tauri-plugin-global-shortcut |
+| NSPasteboard | arboard (Clipboard) |
+| Accessibility API | enigo (Input Simulation) |
 
 ## Services to Port
 
-### 1. HotkeyService
-**Purpose**: Global keyboard shortcuts (Hold Fn → Transcribe, Option+Fn → TTS)
+### 1) HotkeyService
 
-**Windows Approach**:
-- Use `SetWindowsHookEx` with `WH_KEYBOARD_LL` for low-level keyboard hook
-- Track key down/up timing for "hold" detection
-- Note: Fn key behavior varies by laptop manufacturer; may need alternative trigger
+Purpose: Global trigger for dictation and TTS.
 
-### 2. AudioRecorder
-**Purpose**: Capture microphone audio for transcription
+Windows approach (Rust):
+- Use `tauri-plugin-global-shortcut`.
+- Suggested triggers:
+  - Dictate: `Ctrl+Space` (toggle).
+  - TTS: `Ctrl+Shift+D` (or similar).
+- Note: Fn key is ignored on Windows; use standard modifier keys.
 
-**Windows Approach**:
-- Use **NAudio** library (`WasapiCapture`) for low-latency recording
-- Match format: 16kHz, 16-bit, mono (Whisper's expected input)
-- Save to WAV or stream directly
+### 2) AudioRecorder
 
-### 3. TranscriptionService
-**Purpose**: Send audio to Groq Whisper API, receive text
+Purpose: Capture microphone audio for transcription.
 
-**Windows Approach**:
-- Use `HttpClient` with `MultipartFormDataContent`
-- API calls are identical—just different HTTP library
-- Parse JSON response with `System.Text.Json`
+Windows approach (Rust):
+- Use `cpal` for low-level audio capture.
+- Configure 16kHz, 16-bit, mono (Whisper standard).
+- Stream raw bytes from `cpal` directly to the API or to a `Vec<u8>` buffer.
 
-### 4. TTSService
-**Purpose**: Convert text to speech via OpenAI/Gemini APIs
+### 3) TranscriptionService
 
-**Windows Approach**:
-- Use `HttpClient.GetStreamAsync()` for streaming response
-- Request PCM format (`response_format: "pcm"`)
-- Stream chunks to audio player as they arrive
+Purpose: Send audio to Groq Whisper API and receive text.
 
-### 5. StreamingAudioPlayer
-**Purpose**: Play PCM audio chunks in real-time
+Windows approach (Rust):
+- Use `reqwest` with `multipart`.
+- Logic matches macOS flow; handle async HTTP.
+- Parse JSON with `serde_json`.
 
-**Windows Approach**:
-- Use **NAudio** `BufferedWaveProvider` + `WaveOutEvent`
-- Configure: 24kHz sample rate, 16-bit, mono
-- Buffer ~500ms before starting playback (matches Mac behavior)
+### 4) TTSService
 
-### 6. TextCaptureService
-**Purpose**: Get selected text from any application
+Purpose: Convert text to speech via OpenAI/Gemini APIs.
 
-**Windows Approach**:
-- **Option A**: UI Automation API to query focused element's selection
-- **Option B**: Simulate Ctrl+C, read clipboard, restore original clipboard
-- Option B is more reliable across legacy apps
+Windows approach (Rust):
+- Use `reqwest` streaming response support (`StreamExt`).
+- Request PCM output (`response_format: "pcm"`).
+- Stream chunks into a ring buffer or `VecDeque`.
 
-### 7. PasteService
-**Purpose**: Type transcribed text into active window
+### 5) StreamingAudioPlayer
 
-**Windows Approach**:
-- Use `SendInput` Win32 API to simulate keyboard input
-- Or set clipboard and simulate Ctrl+V
+Purpose: Play PCM audio chunks in real-time.
 
-### 8. KeychainHelper
-**Purpose**: Securely store API keys
+Windows approach (Rust):
+- Use `rodio`.
+- Create a custom `Source` reading from the incoming stream buffer.
+- Start playback after ~300-500ms of buffered audio to reduce jitter.
 
-**Windows Approach**:
-- Use `Windows.Security.Credentials.PasswordVault`
-- Or use DPAPI (`ProtectedData.Protect/Unprotect`)
+### 6) TextCaptureService
 
-### 9. GroqService
-**Purpose**: Analyze text tone for "Auto" preset
+Purpose: Get selected text from any application.
 
-**Windows Approach**:
-- Standard `HttpClient` POST to Groq API
-- API logic is identical to macOS version
+Windows approach (Rust):
+- Use the "copy trick":
+  - Simulate `Ctrl+C` via `enigo`.
+  - Read text from the clipboard via `arboard`.
+- Optional: restore previous clipboard content.
 
-### 10. AudioFeedbackService
-**Purpose**: Play system sounds for feedback
+### 7) PasteService
 
-**Windows Approach**:
-- Use `System.Media.SoundPlayer` for WAV files
-- Or use `SystemSounds.Beep.Play()` for system sounds
+Purpose: Type transcribed text into the active window.
 
----
+Windows approach (Rust):
+- Use `enigo` to simulate keyboard input.
+- `enigo.text(transcribed_string)` types it immediately.
 
-## UI Components
+### 8) KeychainHelper
 
-### System Tray App
-- Use `NotifyIcon` or WinUI 3's system tray support
-- Show context menu with options (Settings, Quit, Stats)
+Purpose: Securely store API keys.
 
-### Floating Overlay (Recording Indicator)
-- Borderless, always-on-top window
-- Show waveform visualization during recording
-- Position at bottom-center of screen
+Windows approach (Rust):
+- Use `keyring`, which maps to Windows Credential Manager.
+
+## UI Components (Frontend - React)
+
+### Transparent Overlay (Recording)
+
+- Window config:
+  - `transparent: true`
+  - `decorations: false`
+  - `alwaysOnTop: true`
+  - `skipTaskbar: true`
+- Visuals: centered overlay with glowing gradients and smooth animation.
+- Waveform: render via `<canvas>`, driven by audio amplitude data from Rust via Tauri events.
 
 ### Settings Window
-- API key inputs (OpenAI, Gemini, Groq)
-- Voice selection dropdowns
-- Preset management
-- Hotkey configuration
 
-### Stats Dashboard
-- Display usage statistics
-- Word counts, transcription history
+- Standard window with title bar.
+- TailwindCSS themes (Aurora, Midnight, Ember, etc.).
+- Inputs for API keys, passed to the Rust backend for persistence.
 
----
+### System Tray
 
-## Key Technical Considerations
-
-### Audio Format Consistency
-- **Recording**: 16kHz, 16-bit, mono (for Whisper)
-- **TTS Playback**: 24kHz, 16-bit, mono (OpenAI output)
-- Match these exactly to avoid quality issues
-
-### Streaming Buffer Size
-- Buffer 500ms (~24,000 bytes at 24kHz 16-bit) before playback
-- Prevents choppy audio and allows beep to complete
-
-### Hotkey Handling
-- Fn key is often not reported to OS on Windows laptops
-- Consider alternative: `Ctrl+Shift+Space` or configurable
-
-### Startup & Background
-- App should start minimized to system tray
-- Add to Windows startup via registry or Task Scheduler
-
----
-
-## Recommended Libraries
-
-| Purpose | Library |
-|---------|---------|
-| Audio Recording/Playback | NAudio |
-| HTTP Requests | System.Net.Http.HttpClient |
-| JSON Parsing | System.Text.Json |
-| UI Framework | WinUI 3 (Windows App SDK) |
-| Keyboard Hooks | SharpHook or raw Win32 |
-| UI Automation | System.Windows.Automation |
-
----
+- Use `tauri-plugin-system-tray`.
+- Left click: open settings window.
+- Right click: context menu (Quit, About).
 
 ## Development Setup
 
-1. Install **Visual Studio 2022** (Community edition is free)
-2. Install **.NET 8 SDK**
-3. Install **Windows App SDK** workload
-4. Clone this repository for reference
-5. Create new **WinUI 3** project
+- Prerequisites:
+  - Node.js
+  - Rust (via `rustup`)
+  - Microsoft Visual Studio C++ Build Tools
+- Scaffold:
+  - `npm create tauri-app@latest`
+  - Select React, TypeScript, Tailwind
+- Configure `tauri.conf.json` permissions for shell, clipboard, and HTTP.
 
----
+## Recommended Libraries (Crates)
+
+| Purpose | Rust Crate |
+| --- | --- |
+| Audio Capture | cpal |
+| Audio Playback | rodio |
+| HTTP Requests | reqwest |
+| Serialization | serde, serde_json |
+| Input Simulation | enigo |
+| Global Hotkeys | tauri-plugin-global-shortcut |
+| Clipboard | arboard |
+| Secrets/Keys | keyring |
 
 ## Suggested Port Order
 
-1. **Phase 1 - Core Services** (No UI)
-   - KeychainHelper → PasswordVault wrapper
-   - GroqService → HttpClient implementation
-   - TTSService → HttpClient + NAudio streaming
+### Phase 1 - Rust Backend (Core)
 
-2. **Phase 2 - Audio Pipeline**
-   - AudioRecorder → NAudio WasapiCapture
-   - StreamingAudioPlayer → NAudio BufferedWaveProvider
-   - AudioFeedbackService → SoundPlayer
+- Set up `reqwest` for OpenAI/Groq/Gemini APIs.
+- Implement `keyring` for saving keys.
+- Verify `cpal` recording to a WAV file.
 
-3. **Phase 3 - System Integration**
-   - HotkeyService → Keyboard hooks
-   - TextCaptureService → UI Automation or clipboard
-   - PasteService → SendInput
+### Phase 2 - Ghost Window (Overlay)
 
-4. **Phase 4 - UI**
-   - System tray icon
-   - Settings window
-   - Recording overlay
-   - Stats dashboard
+- Configure the transparent overlay in `tauri.conf.json`.
+- Build the React overlay UI.
+- Send amplitude events from Rust to React for waveform rendering.
 
----
+### Phase 3 - System Integration
 
-## Notes
+- Implement global hotkeys (`Ctrl+Space`).
+- Implement copy/paste simulation with `enigo`.
 
-- The API logic (OpenAI, Gemini, Groq) is platform-agnostic—only the HTTP library changes
-- The "Director's Notes" prompt format for Gemini TTS works identically
-- Voice presets and their instructions transfer directly
-- Focus on getting streaming TTS working first—it's the most complex part
+### Phase 4 - Polish
+
+- Add theme switching (Tailwind classes).
+- Finalize streaming TTS buffer logic.
