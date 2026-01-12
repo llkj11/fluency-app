@@ -3,6 +3,7 @@ import SwiftData
 
 struct MainAppView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.themeManager) private var themeManager
     @Query(sort: \Transcription.createdAt, order: .reverse) private var transcriptions: [Transcription]
     
     @State private var serverStats: StatsService.ServerStats?
@@ -78,35 +79,17 @@ struct MainAppView: View {
             HStack(spacing: 8) {
                 Image(systemName: "waveform.circle.fill")
                     .font(.system(size: 28))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.purple, .blue],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .foregroundStyle(themeManager.colors.headerGradient)
                 
                 Text("Fluency")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.purple, .blue, .cyan],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .font(themeManager.fonts.title(size: 28))
+                    .foregroundStyle(themeManager.colors.headerGradient)
             }
             
             Spacer()
         }
         .padding(.vertical, 20)
-        .background(
-            LinearGradient(
-                colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.05)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        .background(themeManager.colors.backgroundGradient)
     }
     
     // MARK: - Dashboard View

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RecordingOverlay: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.themeManager) private var themeManager
     
     var body: some View {
         HStack(spacing: 0) {
@@ -10,7 +11,7 @@ struct RecordingOverlay: View {
                 TranscribingView()
             } else {
                 // Recording state - show waveform
-                ModernWaveformView(level: appState.audioLevel, isRecording: appState.isRecording)
+                ModernWaveformView(level: appState.audioLevel, isRecording: appState.isRecording, themeManager: themeManager)
             }
         }
         .frame(width: 180, height: 50)
@@ -51,6 +52,7 @@ struct TranscribingView: View {
 struct ModernWaveformView: View {
     let level: Float
     let isRecording: Bool
+    let themeManager: ThemeManager
     let barCount = 12
     
     var body: some View {
@@ -59,7 +61,8 @@ struct ModernWaveformView: View {
                 ModernWaveformBar(
                     level: level,
                     index: index,
-                    isRecording: isRecording
+                    isRecording: isRecording,
+                    themeManager: themeManager
                 )
             }
         }
@@ -72,6 +75,7 @@ struct ModernWaveformBar: View {
     let level: Float
     let index: Int
     let isRecording: Bool
+    let themeManager: ThemeManager
     
     @State private var animatedHeight: CGFloat = 0.15
     
@@ -85,8 +89,8 @@ struct ModernWaveformBar: View {
             .fill(
                 LinearGradient(
                     colors: [
-                        Color(red: 0.4, green: 0.8, blue: 1.0),
-                        Color(red: 0.6, green: 0.4, blue: 1.0)
+                        themeManager.colors.gradientMiddle,
+                        themeManager.colors.gradientEnd
                     ],
                     startPoint: .top,
                     endPoint: .bottom

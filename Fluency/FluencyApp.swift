@@ -15,6 +15,8 @@ struct FluencyApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
+    
+    static let sharedThemeManager = ThemeManager()
 
     var sharedModelContainer: ModelContainer {
         FluencyApp.sharedModelContainer
@@ -24,6 +26,7 @@ struct FluencyApp: App {
         Settings {
             SettingsView()
                 .modelContainer(sharedModelContainer)
+                .environment(\.themeManager, FluencyApp.sharedThemeManager)
         }
 
         MenuBarExtra {
@@ -37,6 +40,7 @@ struct FluencyApp: App {
             )
                 .modelContainer(sharedModelContainer)
                 .environmentObject(appDelegate.appState)
+                .environment(\.themeManager, FluencyApp.sharedThemeManager)
         } label: {
             Image(systemName: appDelegate.appState.isRecording ? "waveform.circle.fill" : "waveform.circle")
                 .symbolRenderingMode(.hierarchical)
@@ -91,6 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let settingsView = SettingsView()
             .environmentObject(appState)
             .modelContainer(FluencyApp.sharedModelContainer)
+            .environment(\.themeManager, FluencyApp.sharedThemeManager)
         
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 450, height: 600),
@@ -120,6 +125,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let mainView = MainAppView()
             .environmentObject(appState)
             .modelContainer(FluencyApp.sharedModelContainer)
+            .environment(\.themeManager, FluencyApp.sharedThemeManager)
         
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 650, height: 550),
@@ -150,6 +156,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let overlay = AnyView(
             RecordingOverlay()
                 .environmentObject(appState)
+                .environment(\.themeManager, FluencyApp.sharedThemeManager)
         )
 
         let hostingView = NSHostingView(rootView: overlay)
@@ -186,6 +193,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let overlay = AnyView(
             SpeakingOverlay()
                 .environmentObject(appState)
+                .environment(\.themeManager, FluencyApp.sharedThemeManager)
         )
 
         let hostingView = NSHostingView(rootView: overlay)

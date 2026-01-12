@@ -3,6 +3,7 @@ import ServiceManagement
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeManager) private var themeManager
 
     @State private var apiKey: String = ""
     @State private var geminiAPIKey: String = ""
@@ -349,6 +350,23 @@ struct SettingsView: View {
                     }
             } header: {
                 Text("General")
+            }
+            
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(AppTheme.allCases) { theme in
+                        ThemeRow(
+                            theme: theme,
+                            isSelected: themeManager.currentTheme == theme,
+                            onSelect: { themeManager.currentTheme = theme }
+                        )
+                    }
+                }
+            } header: {
+                Text("Appearance")
+            } footer: {
+                Text("Theme affects colors, fonts, and styling across the app.")
+                    .font(.caption)
             }
             
             Section {
@@ -804,6 +822,73 @@ struct StatusIndicator: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
+    }
+}
+
+struct ThemeRow: View {
+    let theme: AppTheme
+    let isSelected: Bool
+    let onSelect: () -> Void
+    
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 12) {
+                // Color swatches
+                HStack(spacing: 2) {
+                    let colors = ThemeManager().currentTheme == theme ? 
+                        ThemeManager().colors : getColorsForTheme(theme)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(colors.gradientStart)
+                        .frame(width: 16, height: 24)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(colors.gradientMiddle)
+                        .frame(width: 16, height: 24)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(colors.gradientEnd)
+                        .frame(width: 16, height: 24)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(Color.primary.opacity(0.2), lineWidth: 1)
+                )
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Image(systemName: theme.icon)
+                            .font(.caption)
+                        Text(theme.rawValue)
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    Text(theme.description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.accentColor)
+                }
+            }
+            .padding(8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color.accentColor.opacity(0.1) : Color.clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func getColorsForTheme(_ theme: AppTheme) -> ThemeColors {
+        let tempManager = ThemeManager()
+        let originalTheme = tempManager.currentTheme
+        tempManager.currentTheme = theme
+        let colors = tempManager.colors
+        tempManager.currentTheme = originalTheme
+        return colors
     }
 }
 

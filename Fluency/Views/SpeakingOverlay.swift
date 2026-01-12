@@ -2,11 +2,12 @@ import SwiftUI
 
 struct SpeakingOverlay: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.themeManager) private var themeManager
     
     var body: some View {
         HStack(spacing: 12) {
             // Speaker icon with animation
-            SpeakerWaveView(isSpeaking: appState.isSpeaking)
+            SpeakerWaveView(isSpeaking: appState.isSpeaking, themeManager: themeManager)
             
             Text("Speaking...")
                 .font(.system(size: 13, weight: .medium))
@@ -34,6 +35,7 @@ struct SpeakingOverlay: View {
 
 struct SpeakerWaveView: View {
     let isSpeaking: Bool
+    let themeManager: ThemeManager
     
     @State private var animationPhase: CGFloat = 0
     
@@ -45,8 +47,8 @@ struct SpeakerWaveView: View {
                 .foregroundStyle(
                     LinearGradient(
                         colors: [
-                            Color(red: 0.2, green: 0.9, blue: 0.6),
-                            Color(red: 0.1, green: 0.7, blue: 0.8)
+                            themeManager.colors.gradientStart,
+                            themeManager.colors.gradientEnd
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -59,7 +61,8 @@ struct SpeakerWaveView: View {
                     SoundWaveBar(
                         index: index,
                         phase: animationPhase,
-                        isSpeaking: isSpeaking
+                        isSpeaking: isSpeaking,
+                        themeManager: themeManager
                     )
                 }
             }
@@ -87,6 +90,7 @@ struct SoundWaveBar: View {
     let index: Int
     let phase: CGFloat
     let isSpeaking: Bool
+    let themeManager: ThemeManager
     
     private var animatedHeight: CGFloat {
         guard isSpeaking else { return 0.2 }
@@ -101,8 +105,8 @@ struct SoundWaveBar: View {
             .fill(
                 LinearGradient(
                     colors: [
-                        Color(red: 0.2, green: 0.9, blue: 0.6),
-                        Color(red: 0.1, green: 0.7, blue: 0.8)
+                        themeManager.colors.gradientStart,
+                        themeManager.colors.gradientEnd
                     ],
                     startPoint: .top,
                     endPoint: .bottom

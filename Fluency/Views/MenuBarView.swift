@@ -4,6 +4,7 @@ import SwiftData
 struct MenuBarView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.themeManager) private var themeManager
     var openSettingsAction: (() -> Void)? = nil
     var openMainAppAction: (() -> Void)? = nil
     @Query(sort: \Transcription.createdAt, order: .reverse) private var transcriptions: [Transcription]
