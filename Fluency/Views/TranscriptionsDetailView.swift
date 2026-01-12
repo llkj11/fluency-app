@@ -5,6 +5,7 @@ struct TranscriptionsDetailView: View {
     @State private var searchText = ""
     @State private var isLoading = true
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeManager) private var themeManager
     
     var filteredTranscriptions: [StatsService.ServerTranscription] {
         if searchText.isEmpty {
@@ -18,19 +19,20 @@ struct TranscriptionsDetailView: View {
             // Header
             HStack {
                 Text("All Transcriptions")
-                    .font(.headline)
+                    .font(themeManager.fonts.headline())
+                    .foregroundColor(themeManager.colors.textPrimary)
                 
                 Spacer()
                 
                 Text("\(transcriptions.count) total")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(themeManager.fonts.caption())
+                    .foregroundColor(themeManager.colors.textSecondary)
                 
                 Button {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.colors.textMuted)
                 }
                 .buttonStyle(.plain)
             }
@@ -48,23 +50,26 @@ struct TranscriptionsDetailView: View {
             if isLoading {
                 Spacer()
                 ProgressView("Loading...")
+                    .foregroundColor(themeManager.colors.textSecondary)
                 Spacer()
             } else if filteredTranscriptions.isEmpty {
                 Spacer()
                 VStack(spacing: 8) {
                     Image(systemName: "doc.text.magnifyingglass")
                         .font(.system(size: 40))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.colors.textMuted)
                     Text(searchText.isEmpty ? "No transcriptions yet" : "No matches found")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.colors.textSecondary)
                 }
                 Spacer()
             } else {
                 List(filteredTranscriptions) { transcription in
-                    TranscriptionRowView(transcription: transcription)
+                    TranscriptionRowView(transcription: transcription, themeManager: themeManager)
                 }
+                .scrollContentBackground(.hidden)
             }
         }
+        .background(themeManager.colors.fullWindowGradient)
         .frame(width: 400, height: 500)
         .task {
             await loadTranscriptions()
@@ -80,6 +85,7 @@ struct TranscriptionsDetailView: View {
 
 struct TranscriptionRowView: View {
     let transcription: StatsService.ServerTranscription
+    let themeManager: ThemeManager
     @State private var isHovering = false
     @State private var copied = false
     
@@ -97,28 +103,29 @@ struct TranscriptionRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(transcription.text)
-                .font(.system(size: 12))
+                .font(themeManager.fonts.body(size: 12))
+                .foregroundColor(themeManager.colors.textPrimary)
                 .lineLimit(3)
             
             HStack {
                 Label("\(transcription.wordCount) words", systemImage: "text.word.spacing")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(themeManager.fonts.caption(size: 10))
+                    .foregroundColor(themeManager.colors.textSecondary)
                 
                 Text("•")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(themeManager.colors.textMuted)
                 
                 Text(formattedDate)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(themeManager.fonts.caption(size: 10))
+                    .foregroundColor(themeManager.colors.textSecondary)
                 
                 if let device = transcription.device {
                     Text("•")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.colors.textMuted)
                     
                     Label(device, systemImage: device == "mac" ? "desktopcomputer" : "iphone")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(themeManager.fonts.caption(size: 10))
+                        .foregroundColor(themeManager.colors.textSecondary)
                 }
                 
                 Spacer()
@@ -131,11 +138,12 @@ struct TranscriptionRowView: View {
                             .font(.caption)
                     }
                     .buttonStyle(.plain)
-                    .foregroundColor(copied ? .green : .accentColor)
+                    .foregroundColor(copied ? .green : themeManager.colors.accent)
                 }
             }
         }
         .padding(.vertical, 4)
+        .listRowBackground(Color.clear)
         .onHover { hovering in
             isHovering = hovering
         }

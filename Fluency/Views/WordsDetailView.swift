@@ -5,6 +5,7 @@ struct WordsDetailView: View {
     @State private var searchText = ""
     @State private var isLoading = true
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeManager) private var themeManager
     
     var filteredWords: [StatsService.WordEntry] {
         guard let words = wordStats?.allWords else { return [] }
@@ -19,21 +20,22 @@ struct WordsDetailView: View {
             // Header
             HStack {
                 Text("Word Breakdown")
-                    .font(.headline)
+                    .font(themeManager.fonts.headline())
+                    .foregroundColor(themeManager.colors.textPrimary)
                 
                 Spacer()
                 
                 if let stats = wordStats {
                     Text("\(stats.uniqueWords) unique")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(themeManager.fonts.caption())
+                        .foregroundColor(themeManager.colors.textSecondary)
                 }
                 
                 Button {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.colors.textMuted)
                 }
                 .buttonStyle(.plain)
             }
@@ -42,8 +44,8 @@ struct WordsDetailView: View {
             // Summary Cards
             if let stats = wordStats {
                 HStack(spacing: 12) {
-                    SummaryCard(value: "\(stats.totalWords)", label: "Total Words", color: .blue)
-                    SummaryCard(value: "\(stats.uniqueWords)", label: "Unique", color: .purple)
+                    SummaryCard(value: "\(stats.totalWords)", label: "Total Words", color: themeManager.colors.iconWords, themeManager: themeManager)
+                    SummaryCard(value: "\(stats.uniqueWords)", label: "Unique", color: themeManager.colors.iconTranscriptions, themeManager: themeManager)
                 }
                 .padding(.horizontal)
             }
@@ -61,23 +63,26 @@ struct WordsDetailView: View {
             if isLoading {
                 Spacer()
                 ProgressView("Loading...")
+                    .foregroundColor(themeManager.colors.textSecondary)
                 Spacer()
             } else if filteredWords.isEmpty {
                 Spacer()
                 VStack(spacing: 8) {
                     Image(systemName: "textformat.abc")
                         .font(.system(size: 40))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.colors.textMuted)
                     Text(searchText.isEmpty ? "No words yet" : "No matches found")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.colors.textSecondary)
                 }
                 Spacer()
             } else {
                 List(filteredWords) { entry in
-                    WordRowView(entry: entry, maxCount: wordStats?.topWords.first?.count ?? 1)
+                    WordRowView(entry: entry, maxCount: wordStats?.topWords.first?.count ?? 1, themeManager: themeManager)
                 }
+                .scrollContentBackground(.hidden)
             }
         }
+        .background(themeManager.colors.fullWindowGradient)
         .frame(width: 400, height: 500)
         .task {
             await loadWordStats()
@@ -95,21 +100,26 @@ struct SummaryCard: View {
     let value: String
     let label: String
     let color: Color
+    let themeManager: ThemeManager
     
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(themeManager.fonts.statValue(size: 24))
                 .foregroundColor(color)
             Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(themeManager.fonts.caption())
+                .foregroundColor(themeManager.colors.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(color.opacity(0.1))
+                .fill(themeManager.colors.cardBackground.opacity(themeManager.colors.cardBackgroundOpacity))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(color.opacity(0.3), lineWidth: 1)
         )
     }
 }
@@ -117,6 +127,7 @@ struct SummaryCard: View {
 struct WordRowView: View {
     let entry: StatsService.WordEntry
     let maxCount: Int
+    let themeManager: ThemeManager
     
     var barWidth: CGFloat {
         CGFloat(entry.count) / CGFloat(max(1, maxCount))
@@ -125,7 +136,8 @@ struct WordRowView: View {
     var body: some View {
         HStack {
             Text(entry.word)
-                .font(.system(size: 13, design: .monospaced))
+                .font(themeManager.fonts.body(size: 13))
+                .foregroundColor(themeManager.colors.textPrimary)
             
             Spacer()
             
@@ -134,7 +146,7 @@ struct WordRowView: View {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(
                         LinearGradient(
-                            colors: [.blue.opacity(0.6), .purple.opacity(0.6)],
+                            colors: [themeManager.colors.gradientStart.opacity(0.6), themeManager.colors.gradientEnd.opacity(0.6)],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -144,11 +156,12 @@ struct WordRowView: View {
             .frame(width: 100, height: 16)
             
             Text("\(entry.count)")
-                .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundColor(.secondary)
+                .font(themeManager.fonts.caption(size: 12))
+                .foregroundColor(themeManager.colors.textSecondary)
                 .frame(width: 40, alignment: .trailing)
         }
         .padding(.vertical, 2)
+        .listRowBackground(Color.clear)
     }
 }
 
