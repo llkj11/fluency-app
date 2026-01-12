@@ -101,6 +101,7 @@ class HotkeyService {
     private var startRecordingWorkItem: DispatchWorkItem?
     private var ttsTriggered = false
     private var cancelTriggered = false
+    private var requireRelease = false  // Blocks new recordings until Fn is fully released
 
     private func handleFlagsChanged(event: NSEvent) {
         let flags = event.modifierFlags
@@ -116,7 +117,13 @@ class HotkeyService {
         let primaryPressed = flags.contains(sttBinding.primaryModifier.nsEventFlag)
 
         // Debug: print all flag changes
-        print("🔑 Flags: keyCode=\(keyCode), stt=\(matchesSTT), cancel=\(matchesCancel), tts=\(matchesTTS), fnPressed=\(fnPressed), raw=\(flags.rawValue)")
+        print("🔑 Flags: keyCode=\(keyCode), stt=\(matchesSTT), cancel=\(matchesCancel), tts=\(matchesTTS), fnPressed=\(fnPressed), requireRelease=\(requireRelease), raw=\(flags.rawValue)")
+        
+        // Clear requireRelease when primary modifier is fully released
+        if !primaryPressed && requireRelease {
+            print("🔓 Primary modifier released - allowing new recordings")
+            requireRelease = false
+        }
 
         // Handle TTS trigger (tap action, not hold)
         if matchesTTS && !ttsTriggered {
@@ -132,8 +139,9 @@ class HotkeyService {
                 stopRecording()
             }
             
-            // Reset fnPressed so we don't trigger STT when releasing
+            // Reset fnPressed and require full release before new recording
             fnPressed = false
+            requireRelease = true
             
             print("🔊 TTS hotkey detected - triggering TTS!")
             DispatchQueue.main.async { [weak self] in
@@ -161,8 +169,10 @@ class HotkeyService {
                 cancelRecording()
             }
             
-            // Reset fnPressed so we don't trigger STT when releasing
+            // Reset fnPressed and require full release before new recording
             fnPressed = false
+            requireRelease = true
+            print("🔒 Cancel triggered - requiring full release before new recording")
             return // Skip further processing
         }
         
@@ -172,7 +182,8 @@ class HotkeyService {
         }
 
         // Handle STT (hold action)
-        if matchesSTT && !fnPressed && !ttsTriggered && !cancelTriggered {
+        // Only start if: matches STT, not already pressed, no TTS/cancel active, AND not requiring release
+        if matchesSTT && !fnPressed && !ttsTriggered && !cancelTriggered && !requireRelease {
             fnPressed = true
             
             // Cancel any existing work item
