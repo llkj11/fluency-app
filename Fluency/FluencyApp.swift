@@ -479,7 +479,19 @@ class AppState: ObservableObject {
     }
 
     private func saveTranscription(text: String, duration: TimeInterval) {
-        // SwiftData save handled by the view's modelContext
+        // Insert directly into SwiftData (guaranteed to run)
+        let modelContext = FluencyApp.sharedModelContainer.mainContext
+        let transcription = Transcription(text: text, duration: duration)
+        modelContext.insert(transcription)
+        try? modelContext.save()
+        
+        // Sync to server
+        Task {
+            await SyncService.shared.syncTranscription(transcription)
+            await SyncService.shared.syncStats()
+        }
+        
+        // Post notification for UI refresh (stats update)
         NotificationCenter.default.post(
             name: .newTranscription,
             object: nil,

@@ -38,20 +38,11 @@ struct MenuBarView: View {
         }
         .background(themeManager.colors.fullWindowGradient)
         .frame(width: 320, height: 400)
-        .onReceive(NotificationCenter.default.publisher(for: .newTranscription)) { notification in
-            if let userInfo = notification.userInfo,
-               let text = userInfo["text"] as? String,
-               let duration = userInfo["duration"] as? TimeInterval {
-                let transcription = Transcription(text: text, duration: duration)
-                modelContext.insert(transcription)
-                try? modelContext.save()
-                
-                // Sync to server
-                Task {
-                    await SyncService.shared.syncTranscription(transcription)
-                    await SyncService.shared.syncStats()
-                    try? modelContext.save()
-                }
+        .onReceive(NotificationCenter.default.publisher(for: .newTranscription)) { _ in
+            // Refresh stats when a new transcription is saved
+            // (SwiftData insert is now handled by AppDelegate)
+            Task {
+                serverStats = await StatsService.shared.fetchStats()
             }
         }
     }
