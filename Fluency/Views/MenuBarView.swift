@@ -36,6 +36,7 @@ struct MenuBarView: View {
             // Tab bar
             tabBar
         }
+        .background(themeManager.colors.fullWindowGradient)
         .frame(width: 320, height: 400)
         .onReceive(NotificationCenter.default.publisher(for: .newTranscription)) { notification in
             if let userInfo = notification.userInfo,
@@ -133,7 +134,8 @@ struct MenuBarView: View {
                         value: "\(serverStats?.totalWords ?? 0)",
                         label: "Words",
                         icon: "text.word.spacing",
-                        color: .blue
+                        color: themeManager.colors.iconWords,
+                        themeManager: themeManager
                     )
                 }
                 .buttonStyle(.plain)
@@ -148,7 +150,8 @@ struct MenuBarView: View {
                         value: "\(serverStats?.totalTranscriptions ?? 0)",
                         label: "Transcriptions",
                         icon: "waveform",
-                        color: .purple
+                        color: themeManager.colors.iconTranscriptions,
+                        themeManager: themeManager
                     )
                 }
                 .buttonStyle(.plain)
@@ -162,14 +165,16 @@ struct MenuBarView: View {
                     value: formatTime(serverStats?.totalDuration ?? 0),
                     label: "Recorded",
                     icon: "clock",
-                    color: .orange
+                    color: themeManager.colors.iconTime,
+                    themeManager: themeManager
                 )
                 
                 MiniStatCard(
                     value: formatTime(StatsService.shared.estimatedTimeSaved),
                     label: "Time Saved",
                     icon: "bolt.fill",
-                    color: .green
+                    color: themeManager.colors.iconSaved,
+                    themeManager: themeManager
                 )
             }
         }
@@ -326,6 +331,7 @@ struct MiniStatCard: View {
     let label: String
     let icon: String
     let color: Color
+    let themeManager: ThemeManager
     
     var body: some View {
         HStack(spacing: 10) {
@@ -336,10 +342,11 @@ struct MiniStatCard: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(value)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(themeManager.fonts.headline(size: 15))
+                    .foregroundColor(themeManager.colors.textPrimary)
                 Text(label)
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+                    .font(themeManager.fonts.caption(size: 10))
+                    .foregroundColor(themeManager.colors.textSecondary)
             }
             
             Spacer()
@@ -347,7 +354,11 @@ struct MiniStatCard: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(color.opacity(0.08))
+                .fill(themeManager.colors.cardBackground.opacity(themeManager.colors.cardBackgroundOpacity))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(color.opacity(0.25), lineWidth: 1)
         )
     }
 }

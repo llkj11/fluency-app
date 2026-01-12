@@ -46,6 +46,7 @@ struct MainAppView: View {
                     .tag(3)
             }
         }
+        .background(themeManager.colors.fullWindowGradient)
         .frame(minWidth: 650, minHeight: 550)
         .task {
             serverStats = await StatsService.shared.fetchStats()
@@ -106,7 +107,8 @@ struct MainAppView: View {
                             title: "Words Dictated",
                             value: "\(serverStats?.totalWords ?? 0)",
                             icon: "text.word.spacing",
-                            color: .blue
+                            color: themeManager.colors.iconWords,
+                            themeManager: themeManager
                         )
                     }
                     .buttonStyle(.plain)
@@ -121,7 +123,8 @@ struct MainAppView: View {
                             title: "Transcriptions",
                             value: "\(serverStats?.totalTranscriptions ?? 0)",
                             icon: "waveform",
-                            color: .purple
+                            color: themeManager.colors.iconTranscriptions,
+                            themeManager: themeManager
                         )
                     }
                     .buttonStyle(.plain)
@@ -133,14 +136,16 @@ struct MainAppView: View {
                         title: "Time Recorded",
                         value: formatDuration(serverStats?.totalDuration ?? 0),
                         icon: "clock",
-                        color: .orange
+                        color: themeManager.colors.iconTime,
+                        themeManager: themeManager
                     )
                     
                     MainStatCard(
                         title: "Time Saved",
                         value: formatDuration(StatsService.shared.estimatedTimeSaved),
                         icon: "bolt.fill",
-                        color: .green
+                        color: themeManager.colors.iconSaved,
+                        themeManager: themeManager
                     )
                 }
                 .padding(.horizontal)
@@ -280,6 +285,7 @@ struct MainStatCard: View {
     let value: String
     let icon: String
     let color: Color
+    let themeManager: ThemeManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -292,20 +298,21 @@ struct MainStatCard: View {
             }
             
             Text(value)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(themeManager.fonts.statValue())
+                .foregroundColor(themeManager.colors.textPrimary)
             
             Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(themeManager.fonts.caption())
+                .foregroundColor(themeManager.colors.textSecondary)
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(color.opacity(0.1))
+                .fill(themeManager.colors.cardBackground.opacity(themeManager.colors.cardBackgroundOpacity))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(color.opacity(0.2), lineWidth: 1)
+                .stroke(color.opacity(0.3), lineWidth: 1)
         )
     }
 }
