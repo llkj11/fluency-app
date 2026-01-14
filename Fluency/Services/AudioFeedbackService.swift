@@ -29,4 +29,9 @@ class AudioFeedbackService {
     func playErrorSound() {
         NSSound(named: "Basso")?.play()
     }
+    
+    func playAnalyzingSound() {
+        // Distinctive sound for vision/analysis operations
+        NSSound(named: "Purr")?.play()
+    }
 }

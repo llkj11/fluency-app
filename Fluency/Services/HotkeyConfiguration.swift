@@ -8,12 +8,16 @@ enum HotkeyAction: String, CaseIterable, Codable {
     case startRecording = "startRecording"
     case cancelRecording = "cancelRecording"
     case triggerTTS = "triggerTTS"
+    case smartOCR = "smartOCR"
+    case sceneDescription = "sceneDescription"
     
     var displayName: String {
         switch self {
         case .startRecording: return "Start Recording"
         case .cancelRecording: return "Cancel Recording"
         case .triggerTTS: return "Read Aloud (TTS)"
+        case .smartOCR: return "Smart OCR"
+        case .sceneDescription: return "Scene Description"
         }
     }
     
@@ -22,6 +26,8 @@ enum HotkeyAction: String, CaseIterable, Codable {
         case .startRecording: return "Hold to record, release to transcribe"
         case .cancelRecording: return "Cancel current recording without transcribing"
         case .triggerTTS: return "Read selected text aloud"
+        case .smartOCR: return "Extract and read text from selected screen region"
+        case .sceneDescription: return "Describe visual content of selected screen region"
         }
     }
 }
@@ -123,6 +129,16 @@ class HotkeyConfigurationManager {
         .triggerTTS: HotkeyBinding(
             primaryModifier: .fn,
             secondaryModifiers: [.option],
+            requiresHold: false
+        ),
+        .smartOCR: HotkeyBinding(
+            primaryModifier: .fn,
+            secondaryModifiers: [.shift],
+            requiresHold: false
+        ),
+        .sceneDescription: HotkeyBinding(
+            primaryModifier: .fn,
+            secondaryModifiers: [.shift, .option],
             requiresHold: false
         )
     ]

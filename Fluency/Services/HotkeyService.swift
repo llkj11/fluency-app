@@ -17,19 +17,25 @@ class HotkeyService {
     private let onRecordingStop: () -> Void
     private let onRecordingCancel: () -> Void
     private let onTTSTriggered: () -> Void
+    private let onSmartOCRTriggered: () -> Void
+    private let onSceneDescriptionTriggered: () -> Void
 
     init(
         hotkeyConfig: HotkeyConfigurationManager,
         onRecordingStart: @escaping () -> Void,
         onRecordingStop: @escaping () -> Void,
         onRecordingCancel: @escaping () -> Void = {},
-        onTTSTriggered: @escaping () -> Void = {}
+        onTTSTriggered: @escaping () -> Void = {},
+        onSmartOCRTriggered: @escaping () -> Void = {},
+        onSceneDescriptionTriggered: @escaping () -> Void = {}
     ) {
         self.hotkeyConfig = hotkeyConfig
         self.onRecordingStart = onRecordingStart
         self.onRecordingStop = onRecordingStop
         self.onRecordingCancel = onRecordingCancel
         self.onTTSTriggered = onTTSTriggered
+        self.onSmartOCRTriggered = onSmartOCRTriggered
+        self.onSceneDescriptionTriggered = onSceneDescriptionTriggered
     }
 
     func start() {
@@ -101,6 +107,8 @@ class HotkeyService {
     private var startRecordingWorkItem: DispatchWorkItem?
     private var ttsTriggered = false
     private var cancelTriggered = false
+    private var smartOCRTriggered = false
+    private var sceneDescriptionTriggered = false
     private var requireRelease = false  // Blocks new recordings until Fn is fully released
 
     private func handleFlagsChanged(event: NSEvent) {
@@ -111,6 +119,8 @@ class HotkeyService {
         let matchesSTT = hotkeyConfig.matchesAction(.startRecording, flags: flags)
         let matchesCancel = hotkeyConfig.matchesAction(.cancelRecording, flags: flags)
         let matchesTTS = hotkeyConfig.matchesAction(.triggerTTS, flags: flags)
+        let matchesOCR = hotkeyConfig.matchesAction(.smartOCR, flags: flags)
+        let matchesScene = hotkeyConfig.matchesAction(.sceneDescription, flags: flags)
         
         // Get the primary modifier for STT to detect release
         let sttBinding = hotkeyConfig.binding(for: .startRecording)
@@ -180,10 +190,68 @@ class HotkeyService {
         if !matchesCancel {
             cancelTriggered = false
         }
+        
+        // Handle Smart OCR trigger (tap action)
+        if matchesOCR && !smartOCRTriggered {
+            smartOCRTriggered = true
+            
+            // Cancel any pending STT start
+            startRecordingWorkItem?.cancel()
+            startRecordingWorkItem = nil
+            
+            // If we were recording, stop it
+            if isRecording {
+                print("⏹️ Stopping recording for Smart OCR trigger")
+                stopRecording()
+            }
+            
+            fnPressed = false
+            requireRelease = true
+            
+            print("📷 Smart OCR hotkey detected - triggering capture!")
+            DispatchQueue.main.async { [weak self] in
+                self?.onSmartOCRTriggered()
+            }
+            return
+        }
+        
+        // Reset OCR trigger when the combination is broken
+        if !matchesOCR {
+            smartOCRTriggered = false
+        }
+        
+        // Handle Scene Description trigger (tap action)
+        if matchesScene && !sceneDescriptionTriggered {
+            sceneDescriptionTriggered = true
+            
+            // Cancel any pending STT start
+            startRecordingWorkItem?.cancel()
+            startRecordingWorkItem = nil
+            
+            // If we were recording, stop it
+            if isRecording {
+                print("⏹️ Stopping recording for Scene Description trigger")
+                stopRecording()
+            }
+            
+            fnPressed = false
+            requireRelease = true
+            
+            print("🎨 Scene Description hotkey detected - triggering capture!")
+            DispatchQueue.main.async { [weak self] in
+                self?.onSceneDescriptionTriggered()
+            }
+            return
+        }
+        
+        // Reset scene description trigger when the combination is broken
+        if !matchesScene {
+            sceneDescriptionTriggered = false
+        }
 
         // Handle STT (hold action)
-        // Only start if: matches STT, not already pressed, no TTS/cancel active, AND not requiring release
-        if matchesSTT && !fnPressed && !ttsTriggered && !cancelTriggered && !requireRelease {
+        // Only start if: matches STT, not already pressed, no other action active, AND not requiring release
+        if matchesSTT && !fnPressed && !ttsTriggered && !cancelTriggered && !smartOCRTriggered && !sceneDescriptionTriggered && !requireRelease {
             fnPressed = true
             
             // Cancel any existing work item

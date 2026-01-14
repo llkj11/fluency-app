@@ -277,6 +277,7 @@ class AppState: ObservableObject {
     @Published var isRecording = false
     @Published var isTranscribing = false
     @Published var isSpeaking = false
+    @Published var isAnalyzing = false
     @Published var recordingDuration: TimeInterval = 0
     @Published var statusMessage = "Ready"
     @Published var lastTranscription: String?
@@ -284,6 +285,7 @@ class AppState: ObservableObject {
 
     var onRecordingStateChanged: ((Bool) -> Void)?
     var onSpeakingStateChanged: ((Bool) -> Void)?
+    var onAnalyzingStateChanged: ((Bool) -> Void)?
 
     private var hotkeyService: HotkeyService?
     private var audioRecorder: AudioRecorder?
@@ -318,6 +320,16 @@ class AppState: ObservableObject {
             onTTSTriggered: { [weak self] in
                 Task { @MainActor in
                     self?.triggerTTS()
+                }
+            },
+            onSmartOCRTriggered: { [weak self] in
+                Task { @MainActor in
+                    self?.triggerSmartOCR()
+                }
+            },
+            onSceneDescriptionTriggered: { [weak self] in
+                Task { @MainActor in
+                    self?.triggerSceneDescription()
                 }
             }
         )
@@ -376,6 +388,90 @@ class AppState: ObservableObject {
         isSpeaking = false
         statusMessage = "Ready"
         onSpeakingStateChanged?(false)
+    }
+    
+    // MARK: - Vision Methods
+    
+    private func triggerSmartOCR() {
+        guard !isAnalyzing else { return }
+        performVisionCapture(mode: .ocr)
+    }
+    
+    private func triggerSceneDescription() {
+        guard !isAnalyzing else { return }
+        performVisionCapture(mode: .scene)
+    }
+    
+    private enum VisionMode {
+        case ocr
+        case scene
+    }
+    
+    private func performVisionCapture(mode: VisionMode) {
+        isAnalyzing = true
+        statusMessage = mode == .ocr ? "Select text region..." : "Select region..."
+        onAnalyzingStateChanged?(true)
+        
+        Task {
+            do {
+                // Capture screen region
+                guard let imageData = try await ScreenCaptureService.shared.captureRegion() else {
+                    // User cancelled
+                    await MainActor.run {
+                        self.isAnalyzing = false
+                        self.statusMessage = "Cancelled"
+                        self.onAnalyzingStateChanged?(false)
+                    }
+                    return
+                }
+                
+                await MainActor.run {
+                    self.statusMessage = "Analyzing..."
+                    AudioFeedbackService.shared.playAnalyzingSound()
+                }
+                
+                // Analyze the image
+                let result: String
+                if mode == .ocr {
+                    result = try await VisionService.shared.extractText(from: imageData)
+                } else {
+                    result = try await VisionService.shared.describeScene(from: imageData)
+                }
+                
+                // Speak the result if not empty
+                if !result.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    await MainActor.run {
+                        self.isAnalyzing = false
+                        self.isSpeaking = true
+                        self.statusMessage = "Speaking..."
+                        self.onAnalyzingStateChanged?(false)
+                        self.onSpeakingStateChanged?(true)
+                    }
+                    
+                    try await TTSService.shared.speak(text: result) { [weak self] in
+                        Task { @MainActor in
+                            self?.isSpeaking = false
+                            self?.statusMessage = "Ready"
+                            self?.onSpeakingStateChanged?(false)
+                        }
+                    }
+                } else {
+                    await MainActor.run {
+                        self.isAnalyzing = false
+                        self.statusMessage = "No content found"
+                        self.onAnalyzingStateChanged?(false)
+                        AudioFeedbackService.shared.playErrorSound()
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.isAnalyzing = false
+                    self.statusMessage = "Error: \(error.localizedDescription)"
+                    self.onAnalyzingStateChanged?(false)
+                    AudioFeedbackService.shared.playErrorSound()
+                }
+            }
+        }
     }
 
     private func startRecording() {

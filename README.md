@@ -19,6 +19,12 @@
 - **Visual Overlay**: Beautiful animated waveform overlay while speaking.
 - **30+ Voices**: Access a massive library of voices from both providers.
 
+### 👁️ Screen Intelligence (Vision)
+- **Smart OCR**: Press `Fn + Shift`, select a screen region, and Fluency extracts and reads the text aloud.
+- **Scene Description**: Press `Fn + Shift + Option`, select a region, and Fluency describes the visual content (charts, images, diagrams, code).
+- **Gemini 3 Flash**: Uses Google's fastest vision model with minimal latency for quick analysis.
+- **Automatic TTS**: Extracted text or descriptions are immediately spoken using your TTS settings.
+
 ### 🎨 Global Themes
 - **Customize Your Experience**: Choose from 6 unique themes that transform the app's colors, fonts, and styling.
 - **Available Themes**:
@@ -55,6 +61,8 @@ Click the keyboard icon next to any action to toggle secondary modifiers (Option
 | **Dictate** | Hold `Fn`, speak, then release |
 | **Read Selected Text** | Highlight text, then hold `Option` and press `Fn` |
 | **Stop Reading** | Hold `Option` then press `Fn` |
+| **Smart OCR** | Press `Fn + Shift`, select region |
+| **Scene Description** | Press `Fn + Shift + Option`, select region |
 
 ## Requirements
 - macOS 13.0 (Ventura) or later.
