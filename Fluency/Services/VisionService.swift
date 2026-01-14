@@ -56,7 +56,8 @@ class VisionService {
         // Encode image as Base64
         let base64Image = imageData.base64EncodedString()
         
-        // Build request body with minimal thinking for speed
+        // Build request body for Gemini vision API
+        // Use minimal thinking for lowest latency (Gemini 3 Flash)
         let requestBody: [String: Any] = [
             "contents": [
                 [
@@ -73,10 +74,10 @@ class VisionService {
             ],
             "generationConfig": [
                 "temperature": 1.0,
-                "maxOutputTokens": 1024
-            ],
-            "thinkingConfig": [
-                "thinkingLevel": "minimal"  // Lowest latency for Gemini 3 Flash
+                "maxOutputTokens": 1024,
+                "thinking_config": [
+                    "thinkingLevel": "minimal"
+                ]
             ]
         ]
         

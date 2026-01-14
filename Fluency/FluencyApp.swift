@@ -393,12 +393,20 @@ class AppState: ObservableObject {
     // MARK: - Vision Methods
     
     private func triggerSmartOCR() {
-        guard !isAnalyzing else { return }
+        print("🔍 triggerSmartOCR called, isAnalyzing=\(isAnalyzing)")
+        guard !isAnalyzing else {
+            print("🔍 Already analyzing, ignoring Smart OCR trigger")
+            return
+        }
         performVisionCapture(mode: .ocr)
     }
     
     private func triggerSceneDescription() {
-        guard !isAnalyzing else { return }
+        print("🔍 triggerSceneDescription called, isAnalyzing=\(isAnalyzing)")
+        guard !isAnalyzing else {
+            print("🔍 Already analyzing, ignoring Scene Description trigger")
+            return
+        }
         performVisionCapture(mode: .scene)
     }
     
@@ -408,6 +416,7 @@ class AppState: ObservableObject {
     }
     
     private func performVisionCapture(mode: VisionMode) {
+        print("🔍 performVisionCapture starting, mode=\(mode)")
         isAnalyzing = true
         statusMessage = mode == .ocr ? "Select text region..." : "Select region..."
         onAnalyzingStateChanged?(true)
@@ -415,8 +424,10 @@ class AppState: ObservableObject {
         Task {
             do {
                 // Capture screen region
+                print("🔍 Awaiting screen capture...")
                 guard let imageData = try await ScreenCaptureService.shared.captureRegion() else {
                     // User cancelled
+                    print("🔍 Capture returned nil (user cancelled)")
                     await MainActor.run {
                         self.isAnalyzing = false
                         self.statusMessage = "Cancelled"
@@ -425,12 +436,15 @@ class AppState: ObservableObject {
                     return
                 }
                 
+                print("🔍 Capture succeeded, got \(imageData.count) bytes")
+                
                 await MainActor.run {
                     self.statusMessage = "Analyzing..."
                     AudioFeedbackService.shared.playAnalyzingSound()
                 }
                 
                 // Analyze the image
+                print("🔍 Calling VisionService for mode: \(mode)")
                 let result: String
                 if mode == .ocr {
                     result = try await VisionService.shared.extractText(from: imageData)
@@ -438,8 +452,11 @@ class AppState: ObservableObject {
                     result = try await VisionService.shared.describeScene(from: imageData)
                 }
                 
+                print("🔍 VisionService returned: \(result.prefix(100))...")
+                
                 // Speak the result if not empty
                 if !result.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    print("🔍 Speaking result via TTS")
                     await MainActor.run {
                         self.isAnalyzing = false
                         self.isSpeaking = true
@@ -456,6 +473,7 @@ class AppState: ObservableObject {
                         }
                     }
                 } else {
+                    print("🔍 Result was empty, playing error sound")
                     await MainActor.run {
                         self.isAnalyzing = false
                         self.statusMessage = "No content found"
@@ -464,6 +482,8 @@ class AppState: ObservableObject {
                     }
                 }
             } catch {
+                print("❌ Vision pipeline error: \(error)")
+                print("❌ Error details: \(error.localizedDescription)")
                 await MainActor.run {
                     self.isAnalyzing = false
                     self.statusMessage = "Error: \(error.localizedDescription)"

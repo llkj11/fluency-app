@@ -11,11 +11,32 @@ class ScreenCaptureService {
     /// Maximum dimension (width or height) for resized images to optimize API bandwidth
     private let maxImageDimension: CGFloat = 1024
     
+    /// Track if a capture is currently in progress
+    private var isCaptureInProgress = false
+    
+    /// Reference to current process for potential cancellation
+    private var currentProcess: Process?
+    
     private init() {}
     
     /// Captures a user-selected screen region interactively
     /// - Returns: Image data (PNG) of the captured region, or nil if cancelled
     func captureRegion() async throws -> Data? {
+        // Guard against multiple simultaneous captures
+        guard !isCaptureInProgress else {
+            print("⚠️ Screen capture already in progress, ignoring request")
+            return nil
+        }
+        
+        isCaptureInProgress = true
+        print("📷 Starting screen capture...")
+        
+        defer {
+            isCaptureInProgress = false
+            currentProcess = nil
+            print("📷 Capture session ended")
+        }
+        
         // Create a temporary file path for the screenshot
         let tempDir = FileManager.default.temporaryDirectory
         let fileName = "fluency_capture_\(UUID().uuidString).png"
@@ -29,14 +50,20 @@ class ScreenCaptureService {
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
         process.arguments = ["-i", "-x", "-t", "png", tempPath.path]
         
+        currentProcess = process
+        
         // Run the process and wait for completion
-        return try await withCheckedThrowingContinuation { continuation in
+        return try await withCheckedThrowingContinuation { [weak self] continuation in
             do {
-                process.terminationHandler = { [weak self] proc in
+                process.terminationHandler = { proc in
+                    print("📷 Screencapture process terminated with status: \(proc.terminationStatus)")
+                    
                     // Check if file was created (user completed selection)
                     if FileManager.default.fileExists(atPath: tempPath.path) {
+                        print("📷 Screenshot file exists at: \(tempPath.path)")
                         do {
                             let imageData = try Data(contentsOf: tempPath)
+                            print("📷 Loaded image data: \(imageData.count) bytes")
                             // Clean up temp file
                             try? FileManager.default.removeItem(at: tempPath)
                             
@@ -47,19 +74,31 @@ class ScreenCaptureService {
                                 continuation.resume(returning: imageData)
                             }
                         } catch {
+                            print("❌ Failed to read image: \(error)")
                             try? FileManager.default.removeItem(at: tempPath)
                             continuation.resume(throwing: ScreenCaptureError.readFailed(error))
                         }
                     } else {
-                        // User cancelled (pressed ESC)
+                        // User cancelled (pressed ESC) or capture failed
+                        print("📷 No screenshot file created (user cancelled or capture failed)")
                         continuation.resume(returning: nil)
                     }
                 }
                 
                 try process.run()
+                print("📷 Screencapture process started with PID: \(process.processIdentifier)")
             } catch {
+                print("❌ Failed to start screencapture: \(error)")
                 continuation.resume(throwing: ScreenCaptureError.captureFailed(error))
             }
+        }
+    }
+    
+    /// Cancel any in-progress capture
+    func cancelCapture() {
+        if let process = currentProcess, process.isRunning {
+            print("📷 Cancelling in-progress capture")
+            process.terminate()
         }
     }
     
@@ -94,15 +133,18 @@ class ScreenCaptureService {
         let newHeight = Int(originalHeight * scale)
         
         // Create resized image using Core Graphics (thread-safe)
-        guard let colorSpace = cgImage.colorSpace,
-              let context = CGContext(
+        // Use standard sRGB color space and premultiplied alpha (universally supported)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        
+        guard let context = CGContext(
                 data: nil,
                 width: newWidth,
                 height: newHeight,
-                bitsPerComponent: cgImage.bitsPerComponent,
+                bitsPerComponent: 8,
                 bytesPerRow: 0,
                 space: colorSpace,
-                bitmapInfo: cgImage.bitmapInfo.rawValue
+                bitmapInfo: bitmapInfo
               ) else {
             print("⚠️ Could not create CGContext for resizing")
             return data
@@ -141,6 +183,7 @@ enum ScreenCaptureError: LocalizedError {
     case captureFailed(Error)
     case readFailed(Error)
     case noPermission
+    case alreadyInProgress
     
     var errorDescription: String? {
         switch self {
@@ -150,6 +193,8 @@ enum ScreenCaptureError: LocalizedError {
             return "Failed to read captured image: \(error.localizedDescription)"
         case .noPermission:
             return "Screen recording permission not granted"
+        case .alreadyInProgress:
+            return "Another screen capture is already in progress"
         }
     }
 }
