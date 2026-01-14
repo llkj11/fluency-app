@@ -1,6 +1,8 @@
 import Foundation
 import AppKit
 import CoreGraphics
+import ImageIO
+import UniformTypeIdentifiers
 
 /// Service for capturing screen regions interactively using macOS native tools
 class ScreenCaptureService {
@@ -65,48 +67,71 @@ class ScreenCaptureService {
     /// - Parameter data: Original PNG image data
     /// - Returns: Resized image data, or original if resize fails
     private func resizeImage(data: Data) -> Data? {
-        guard let image = NSImage(data: data) else { return nil }
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            print("⚠️ Could not create CGImage from data")
+            return nil
+        }
         
-        let originalSize = image.size
+        let originalWidth = CGFloat(cgImage.width)
+        let originalHeight = CGFloat(cgImage.height)
         
         // Check if resize is needed
-        guard originalSize.width > maxImageDimension || originalSize.height > maxImageDimension else {
+        guard originalWidth > maxImageDimension || originalHeight > maxImageDimension else {
+            print("📸 Image size \(Int(originalWidth))x\(Int(originalHeight)) - no resize needed")
             return data // No resize needed
         }
         
         // Calculate new size maintaining aspect ratio
         let scale: CGFloat
-        if originalSize.width > originalSize.height {
-            scale = maxImageDimension / originalSize.width
+        if originalWidth > originalHeight {
+            scale = maxImageDimension / originalWidth
         } else {
-            scale = maxImageDimension / originalSize.height
+            scale = maxImageDimension / originalHeight
         }
         
-        let newSize = NSSize(
-            width: originalSize.width * scale,
-            height: originalSize.height * scale
-        )
+        let newWidth = Int(originalWidth * scale)
+        let newHeight = Int(originalHeight * scale)
         
-        // Create resized image
-        let resizedImage = NSImage(size: newSize)
-        resizedImage.lockFocus()
-        image.draw(
-            in: NSRect(origin: .zero, size: newSize),
-            from: NSRect(origin: .zero, size: originalSize),
-            operation: .copy,
-            fraction: 1.0
-        )
-        resizedImage.unlockFocus()
+        // Create resized image using Core Graphics (thread-safe)
+        guard let colorSpace = cgImage.colorSpace,
+              let context = CGContext(
+                data: nil,
+                width: newWidth,
+                height: newHeight,
+                bitsPerComponent: cgImage.bitsPerComponent,
+                bytesPerRow: 0,
+                space: colorSpace,
+                bitmapInfo: cgImage.bitmapInfo.rawValue
+              ) else {
+            print("⚠️ Could not create CGContext for resizing")
+            return data
+        }
+        
+        context.interpolationQuality = .high
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: newWidth, height: newHeight))
+        
+        guard let resizedCGImage = context.makeImage() else {
+            print("⚠️ Could not create resized image")
+            return data
+        }
         
         // Convert to PNG data
-        guard let tiffData = resizedImage.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData),
-              let pngData = bitmap.representation(using: .png, properties: [:]) else {
-            return data // Return original if resize fails
+        let mutableData = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(mutableData as CFMutableData, UTType.png.identifier as CFString, 1, nil) else {
+            print("⚠️ Could not create image destination")
+            return data
         }
         
-        print("📸 Resized image from \(Int(originalSize.width))x\(Int(originalSize.height)) to \(Int(newSize.width))x\(Int(newSize.height))")
-        return pngData
+        CGImageDestinationAddImage(destination, resizedCGImage, nil)
+        
+        guard CGImageDestinationFinalize(destination) else {
+            print("⚠️ Could not finalize image destination")
+            return data
+        }
+        
+        print("📸 Resized image from \(Int(originalWidth))x\(Int(originalHeight)) to \(newWidth)x\(newHeight)")
+        return mutableData as Data
     }
 }
 
