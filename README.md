@@ -44,8 +44,8 @@ Built as an alternative to Whisper Flow and similar services.
 Requires Xcode 15+ and macOS 13.0+
 
 ```bash
-git clone https://github.com/llkj11/fluency-app.git
-cd fluency-app
+git clone https://github.com/llkj11/Fluency-Public-.git
+cd Fluency-Public-
 open Fluency.xcodeproj
 ```
 
