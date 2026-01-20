@@ -38,7 +38,7 @@ Built as an alternative to Whisper Flow and similar services.
    ```
 4. Double-click Fluency to launch
 
-> **Note**: The Terminal command is required because the app isn't notarized with Apple ($99/year). It removes the quarantine flag - completely safe.
+> **Why the Terminal command?** macOS blocks apps that aren't "notarized" by Apple. Notarization requires a $99/year developer account. The `xattr -cr` command simply removes the quarantine flag macOS adds to downloads - this is standard for open-source Mac apps. The code is fully open source and you can audit or build it yourself.
 
 ### Option 2: Build from Source
 Requires Xcode 15+ and macOS 13.0+
